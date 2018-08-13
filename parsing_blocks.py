@@ -19,15 +19,13 @@ def check_duplicate(current_height, tx_hash):
 
 
 address_set = list()
-next_height = BEGIN_HEIGHT
+request_height = BEGIN_HEIGHT
 while True:
-    postdata = json.dumps({'method': 'getblockbyheight', 'params': {'height': next_height}})
+    postdata = json.dumps({'method': 'getblockbyheight', 'params': {'height': request_height}})
     response = requests.post(URL, data=postdata, headers={'Content-Type': 'application/json'}).json()
     result = response['result']
-    next_height = result['height'] + 1
-    print("current height:", next_height)
-    if next_height == END_HEIGHT:
-        break
+    print("current height:", request_height)
+    request_height += 1
 
     for tx in result['tx']:
         if tx['type'] == 2:
@@ -48,6 +46,8 @@ while True:
                         print(vout_total)
                         if not check_duplicate(result['height'], tx['hash']):
                             address_set.append([erc20_address, str(vout_total)])
+    if request_height == END_HEIGHT + 1:
+        break
 
 print(address_set)
 with open('./addresses.csv', 'w') as f:
