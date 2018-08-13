@@ -1,5 +1,6 @@
 import requests
 import json
+from web3 import utils, exceptions, Web3, HTTPProvider
 
 URL = 'http://127.0.0.1:21336'
 BEGIN_HEIGHT = 90000
@@ -25,6 +26,7 @@ def check_duplicate(current_height, tx_hash):
 
 
 address_set = list()
+invalid_address_set = list()
 request_height = BEGIN_HEIGHT
 while True:
     postdata = json.dumps({'method': 'getblockbyheight', 'params': {'height': request_height}})
@@ -41,6 +43,13 @@ while True:
                     if data_decoded.startswith('AIRDROP'):
                         print(data_decoded)
                         erc20_address = data_decoded.split(':')[-1]
+                        try:
+                            # validate address
+                            utils.validation.validate_address(Web3(HTTPProvider('')).toChecksumAddress(erc20_address))
+                        except exceptions.InvalidAddress as e:
+                            print(e)
+                            invalid_address_set.append([erc20_address, str(result['height'])])
+                            continue
                         print('erc20 address:', erc20_address)
                         print('tx hash:', tx['hash'])
                         vout_total = 0
@@ -55,4 +64,8 @@ while True:
 print(address_set)
 with open('./addresses.csv', 'w') as f:
     for item in address_set:
+        f.write(','.join(item) + '\n')
+
+with open('./invalid_addresses.csv', 'w') as f:
+    for item in invalid_address_set:
         f.write(','.join(item) + '\n')
