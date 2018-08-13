@@ -2,3 +2,4 @@ eth-abi
 eth-utils
 ethtoken
 web3
+requests

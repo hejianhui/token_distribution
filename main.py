@@ -10,7 +10,7 @@ from eth_abi import encode_single
 from web3 import Web3, HTTPProvider
 from ethtoken.abi import EIP20_ABI
 from eth_utils import decode_hex
-# from web3.auto import w3
+from web3.auto import w3
 from web3.contract import ConciseContract
 import sys
 
@@ -40,6 +40,7 @@ class ContributeTokens(object):
         """
 
         # Get Nonce first
+        self.web3.eth.enable_unaudited_features()
         nonce = self.web3.eth.getTransactionCount(self.source_addr)
         print("Current Nonce:{}".format(nonce))
         # Update Nonce if needed
