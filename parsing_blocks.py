@@ -1,15 +1,16 @@
 import requests
 import json
 
-URL = 'http://127.0.0.1:22336'
+URL = 'http://127.0.0.1:21336'
 BEGIN_HEIGHT = 90000
 END_HEIGHT = 95000
 
 
 def check_duplicate(current_height, tx_hash):
     for height in range(current_height, END_HEIGHT):
-        postdata = json.dumps({'method': 'getblockbyheight', 'params': [current_height, 2]})
+        postdata = json.dumps({'method': 'getblockbyheight', 'params': {'height': current_height}})
         response = requests.post(URL, data=postdata, headers={'Content-Type': 'application/json'}).json()
+        print(response)
         result = response['result']
         for tx in result['tx']:
             if tx['hash'] == tx_hash:
