@@ -1,17 +1,9 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 import json
-
-import time
-import web3
-import csv
-from eth_abi import encode_single
-
-from web3 import Web3, HTTPProvider
+from web3 import Web3, HTTPProvider, utils, exceptions
 from ethtoken.abi import EIP20_ABI
-from eth_utils import decode_hex
-from web3.auto import w3
-from web3.contract import ConciseContract
+
 import sys
 
 from config import *
@@ -25,7 +17,7 @@ class ContributeTokens(object):
         self.web3 = Web3(HTTPProvider(api_endpoint))
         self.erc20 = self.web3.eth.contract(address=contract_address, abi=EIP20_ABI)
         self.private_key = private_key
-        self.source_addr = source_addr
+        self.source_addr = self.web3.toChecksumAddress(source_addr)
         self.nonce = -1
 
         # print(self.web3.personal.importRawKey(private_key,'123456'))
@@ -38,8 +30,15 @@ class ContributeTokens(object):
         :param amount:
         :return:
         """
+        address = self.web3.toChecksumAddress(address)
+        try:
+            # validate address
+            utils.validation.validate_address(address)
+        except exceptions.InvalidAddress as e:
+            print(e)
+            return
 
-        # Get Nonce first
+        # Get Nonce
         self.web3.eth.enable_unaudited_features()
         nonce = self.web3.eth.getTransactionCount(self.source_addr)
         print("Current Nonce:{}".format(nonce))
@@ -59,8 +58,8 @@ class ContributeTokens(object):
             print("Enough Balance")
             # encoded_amount=encode_single('uint256', int(actual_amount))
             txn_body = self.erc20.buildTransaction(
-                {'from': self.web3.toChecksumAddress(self.source_addr), 'gas': 100000, 'gasPrice': self.web3.toWei(gas_price, 'gwei'),
-                 'nonce': self.nonce}).transfer(self.web3.toChecksumAddress(address), int(actual_amount))
+                {'from': self.source_addr, 'gas': 100000, 'gasPrice': self.web3.toWei(gas_price, 'gwei'),
+                 'nonce': self.nonce}).transfer(address, int(actual_amount))
             signed_txn_body = self.web3.eth.account.signTransaction(txn_body, private_key=self.private_key)
             self.web3.eth.sendRawTransaction(signed_txn_body.rawTransaction)
         else:
@@ -69,7 +68,6 @@ class ContributeTokens(object):
 
 
 if __name__ == '__main__':
-
     if len(sys.argv) != 2:
         print("Usage: ")
         print("python3 main.py [CSV_FILE_PATH]")
