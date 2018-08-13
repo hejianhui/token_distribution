@@ -2,21 +2,26 @@ import requests
 import json
 
 URL = 'http://127.0.0.1:21336'
-BEGIN_HEIGHT = 92000
-END_HEIGHT = 95000
+BEGIN_HEIGHT = 90000
+END_HEIGHT = 97200
 
 
 def check_duplicate(current_height, tx_hash):
+    # print('check dup height:', current_height)
+    # print('tx hash:', tx_hash)
     for height in range(current_height + 1, END_HEIGHT):
-        postdata = json.dumps({'method': 'getblockbyheight', 'params': {'height': current_height}})
+        print('current check height:', height)
+        postdata = json.dumps({'method': 'getblockbyheight', 'params': {'height': height}})
         response = requests.post(URL, data=postdata, headers={'Content-Type': 'application/json'}).json()
         result = response['result']
         for tx in result['tx']:
             for input in tx['vin']:
+                print('check, current txid:', input['txid'])
                 if input['txid'] == tx_hash:
-                    print('duplicate transaction hash found, tx hash:', tx_hash)
+                    # print('duplicate transaction hash found, tx hash:', tx_hash)
                     return True
-        return False
+
+    return False
 
 
 address_set = list()
