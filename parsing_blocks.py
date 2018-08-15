@@ -2,9 +2,9 @@ import requests
 import json
 from web3 import Web3
 
-URL = 'http://127.0.0.1:21336'
-BEGIN_HEIGHT = 97170
-END_HEIGHT = 97190
+URL = 'http://127.0.0.1:20336'
+BEGIN_HEIGHT = 167000
+END_HEIGHT = 169419
 
 
 def check_duplicate(airdrop_addresses):
@@ -14,8 +14,7 @@ def check_duplicate(airdrop_addresses):
         find_flag = 0
         print('checking airdrop transaction', airdrop_address['tx_hash'])
         print('checking airdrop transaction height', airdrop_address['height'])
-        for index, block in enumerate(all_inputs[(airdrop_address['height'] - BEGIN_HEIGHT + 1):]):
-            print('index:', index)
+        for block in all_inputs[(airdrop_address['height'] - BEGIN_HEIGHT + 1):]:
             for tx in block:
                 for vin in tx:
                     if vin == airdrop_address['tx_hash']:
@@ -57,16 +56,16 @@ while True:
                     if data_decoded.startswith('AIRDROP'):
                         print(data_decoded)
                         erc20_address = data_decoded.split(':')[-1]
+                        vout_total = sum(float(vout['value']) for vout in tx['vout'])
                         # validate address
                         if not Web3.isAddress(erc20_address):
-                            invalid_address_set.append([erc20_address, str(result['height'])])
+                            invalid_address_set.append([erc20_address, str(result['height']), str(vout_total)])
                             continue
                         print('erc20 address:', erc20_address)
                         print('tx hash:', tx['hash'])
-                        vout_total = sum(float(vout['value']) for vout in tx['vout'])
                         print("total value:", vout_total)
                         addresses_set.append({
-                            'address:': erc20_address,
+                            'address': erc20_address,
                             'total_value': vout_total,
                             'height': result['height'],
                             'tx_hash': tx['hash'],
@@ -83,7 +82,8 @@ no_dup = check_duplicate(addresses_set)
 print(no_dup)
 with open('./addresses.csv', 'w') as f:
     for item in no_dup:
-        f.write(str(item) + '\n')
+        print('this item:', item)
+        f.write(item['address'] + ',' + str(item['total_value']) + '\n')
 
 with open('./invalid_addresses.csv', 'w') as f:
     for item in invalid_address_set:
