@@ -29,6 +29,7 @@ def check_duplicate(airdrop_addresses):
             print('duplicate input find.', airdrop_address)
     return no_duplicate_addresses
 
+
 # print('no duplicate:', no_duplicate_addresses)
 
 
@@ -81,9 +82,13 @@ print('address set:', addresses_set)
 no_dup = check_duplicate(addresses_set)
 print(no_dup)
 with open('./addresses.csv', 'w') as f:
+    all_value = 0
     for item in no_dup:
         print('this item:', item)
+        all_value += item['total_value']
         f.write(item['address'] + ',' + str(item['total_value']) + '\n')
+
+    f.write('total value:' + str(all_value))
 
 with open('./invalid_addresses.csv', 'w') as f:
     for item in invalid_address_set:
