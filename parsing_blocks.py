@@ -1,10 +1,20 @@
 import requests
 import json
 from web3 import Web3
+import itertools
 
 URL = 'http://127.0.0.1:20336'
 BEGIN_HEIGHT = 167000
-END_HEIGHT = 169419
+END_HEIGHT = 170244
+
+
+def check_same_erc20_address(airdrop_addresses):
+    no_duplicate_addresses = list()
+    for key, group in itertools.groupby(airdrop_addresses, lambda x: x['address']):
+        total_sum = sum([x['total_value'] for x in group])
+        no_duplicate_addresses.append({'address': key, 'total_value': total_sum})
+
+    return no_duplicate_addresses
 
 
 def check_duplicate(airdrop_addresses):
@@ -80,11 +90,13 @@ while True:
 print('all inputs:', all_inputs)
 print('address set:', addresses_set)
 no_dup = check_duplicate(addresses_set)
-print(no_dup)
+print('len all_inputs', len(no_dup))
+no_dup = check_same_erc20_address(no_dup)
+print('len all_inputs', len(no_dup))
+# print(no_dup)
 with open('./addresses.csv', 'w') as f:
     all_value = 0
     for item in no_dup:
-        print('this item:', item)
         all_value += item['total_value']
         f.write(item['address'] + ',' + str(item['total_value']) + '\n')
 

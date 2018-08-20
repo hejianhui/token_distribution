@@ -1,5 +1,3 @@
-#!/usr/bin/python
-# -*- coding: UTF-8 -*-
 import json
 from web3 import Web3, HTTPProvider, utils, exceptions
 from ethtoken.abi import EIP20_ABI
@@ -61,7 +59,10 @@ class ContributeTokens(object):
                 {'from': self.source_addr, 'gas': 100000, 'gasPrice': self.web3.toWei(gas_price, 'gwei'),
                  'nonce': self.nonce}).transfer(address, int(actual_amount))
             signed_txn_body = self.web3.eth.account.signTransaction(txn_body, private_key=self.private_key)
-            self.web3.eth.sendRawTransaction(signed_txn_body.rawTransaction)
+            result = self.web3.eth.sendRawTransaction(signed_txn_body.rawTransaction)
+            print('send tx result:', result.hex())
+
+
         else:
             print('代币余额不足！')
             raise Exception("Not Enough Balance for transfer!")
@@ -78,10 +79,19 @@ if __name__ == '__main__':
     else:
         print("Start sending TXs.")
         batch_list = CsvReader(sys.argv[1]).parse()
+        print(batch_list)
 
         handler = ContributeTokens(api_endpoint=api_endpoint, contract_address=contract_address,
                                    private_key=private_key,
                                    source_addr=source_addr)
-        for tx in batch_list:
-            handler.transfer(tx[0], float(tx[1]), gas_price)
+        with open('./send_failed.csv', 'w') as f:
+            for tx in batch_list:
+                try:
+                    handler.transfer(tx[0], float(tx[1]), gas_price)
+                except Exception as e:
+                    print('some mistakes occurred:')
+                    print(e)
+                    print('to address:', tx[0])
+                    f.write(tx[0] + '\n')
+                    continue
         print("All TX Sent.")
