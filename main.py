@@ -87,9 +87,13 @@ if __name__ == '__main__':
         with open('./send_failed.csv', 'w') as f:
             for tx in batch_list:
                 try:
-                    if not Web3.isAddress(tx):
+                    if not Web3.isAddress(tx[0]):
+                        print('not a valide address:', tx)
                         invalid_address_set.append([tx[0], tx[1]])
+                        raise Exception("Not a valid address!")
+
                     handler.transfer(tx[0], float(tx[1]), gas_price)
+                    print('tx sent successfully')
                 except Exception as e:
                     print('some mistakes occurred:')
                     print(e)
