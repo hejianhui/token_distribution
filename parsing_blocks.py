@@ -5,7 +5,8 @@ import itertools
 
 URL = 'http://127.0.0.1:20336'
 BEGIN_HEIGHT = 167000
-END_HEIGHT = 170244
+END_HEIGHT = 173149
+BGX_RATE = 12
 
 
 def check_same_erc20_address(airdrop_addresses):
@@ -75,13 +76,14 @@ while True:
                         print('erc20 address:', erc20_address)
                         print('tx hash:', tx['hash'])
                         print("total value:", vout_total)
-                        addresses_set.append({
-                            'address': erc20_address,
-                            'total_value': vout_total,
-                            'height': result['height'],
-                            'tx_hash': tx['hash'],
-                            'input_txids': input_txs
-                        })
+                        if vout_total > 1.0:
+                            addresses_set.append({
+                                'address': erc20_address,
+                                'total_value': BGX_RATE * vout_total,
+                                'height': result['height'],
+                                'tx_hash': tx['hash'],
+                                'input_txids': input_txs
+                            })
 
     all_inputs.append(block_txs)
     if request_height == END_HEIGHT + 1:

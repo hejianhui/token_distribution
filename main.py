@@ -62,7 +62,6 @@ class ContributeTokens(object):
             result = self.web3.eth.sendRawTransaction(signed_txn_body.rawTransaction)
             print('send tx result:', result.hex())
 
-
         else:
             print('代币余额不足！')
             raise Exception("Not Enough Balance for transfer!")
@@ -80,6 +79,7 @@ if __name__ == '__main__':
         print("Start sending TXs.")
         batch_list = CsvReader(sys.argv[1]).parse()
         print(batch_list)
+        invalid_address_set = list()
 
         handler = ContributeTokens(api_endpoint=api_endpoint, contract_address=contract_address,
                                    private_key=private_key,
@@ -87,11 +87,17 @@ if __name__ == '__main__':
         with open('./send_failed.csv', 'w') as f:
             for tx in batch_list:
                 try:
+                    if not Web3.isAddress(tx):
+                        invalid_address_set.append([tx[0], tx[1]])
                     handler.transfer(tx[0], float(tx[1]), gas_price)
                 except Exception as e:
                     print('some mistakes occurred:')
                     print(e)
                     print('to address:', tx[0])
-                    f.write(tx[0] + '\n')
+                    f.write(tx[0] + ',' + str(tx[1]) + '\n')
                     continue
         print("All TX Sent.")
+
+        with open('./invalid_addresses2.csv', 'w') as f:
+            for item in invalid_address_set:
+                f.write(','.join(item) + '\n')
